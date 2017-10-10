@@ -100,3 +100,19 @@ async def postUser(request, fb_token):
         })
 
     return json_response({ 'friends': friendHighScores}, status=200)
+
+#
+# DELETE - /users/fb_token/:fb_token/clear_highscores/:mode
+#
+@users.route(baseURI + '/fb_token/<fb_token>/clear_highscores/<mode>', methods=['DELETE'])
+async def postUser(request, fb_token, mode):
+
+    user = db.findUserByFbToken(fb_token)
+    if user == None:
+        return json_response({ 'error': Response.NotFoundError }, status=404)
+
+    easyHS = [] if mode == "easy" else user['easy_highscores']
+    hardHS = [] if mode == "hard" else user['hard_highscores']
+    db.updateHighScores(user['_id'], easyHS, hardHS)
+
+    return json_response({ 'success': 'removed ' + mode + ' highscores' }, status=201)
