@@ -20,7 +20,7 @@ baseURI = '/' + users.name
 async def postUser(request):
     body = request.json
 
-    if 'first_name' not in body and 'last_name' not in body and 'fb_token' not in body:
+    if 'first_name' not in body or 'last_name' not in body or 'fb_token' not in body:
         return json_response({ 'error': Response.BadRequest }, status=400)
 
     user_id = db.insertUser(body)
@@ -43,21 +43,60 @@ async def postUser(request, fb_token):
 #
 # PATCH - /users/fb_token/:fb_token/sync_highscores
 #
-@users.route(baseURI + '/fb_token/<fb_token>', methods=['PATCH'])
+@users.route(baseURI + '/fb_token/<fb_token>/sync_highscores', methods=['PATCH'])
 async def postUser(request, fb_token):
     body = request.json
 
-    if 'easy_highscores' not in body and 'hard_highscores' not in body:
+    if 'easy_highscores' not in body or 'hard_highscores' not in body:
         return json_response({ 'error': Response.BadRequest }, status=400)
 
     user = db.findUserByFbToken(fb_token)
     if user == None:
         return json_response({ 'error': Response.NotFoundError }, status=404)
 
-    hardHS = sorted(user['hard_highscores'] + body['hard_highscores'], reversed=True)[:10]
-    easyHS = sorted(user['easy_highscores'] + body['easy_highscores'], reversed=True)[:10]
+    syncedHard = list(set(user['hard_highscores']) | set(body['hard_highscores']))
+    hardHS = sorted(syncedHard, reverse=True)[:10]
+
+    syncedEasy = list(set(user['easy_highscores']) | set(body['easy_highscores']))
+    easyHS = sorted(syncedEasy, reverse=True)[:10]
 
     db.updateHighScores(user['_id'], easyHS, hardHS)
-    user = db.findUserById(user['_id'])
 
-    return json_response({ 'user': user }, status=200)
+    return json_response({ 'easy_highscores': easyHS, 'hard_highscores': hardHS }, status=200)
+
+
+#
+# POST - /users/fb_token/:fb_token/sync_highscores
+#
+@users.route(baseURI + '/fb_token/<fb_token>/get_friends_highscores', methods=['POST'])
+async def postUser(request, fb_token):
+    body = request.json
+
+    if 'fb_tokens' not in body:
+        return json_response({ 'error': Response.BadRequest }, status=400)
+
+    user = db.findUserByFbToken(fb_token)
+    if user == None:
+        return json_response({ 'error': Response.NotFoundError }, status=404)
+
+    friends = db.getAllUsersByFBTokens(body['fb_tokens'])
+    friendHighScores = []
+
+    for friend in friends:
+        maxEasy = 0
+        if len(friend['easy_highscores']) > 0:
+            maxEasy = max(friend['easy_highscores'])
+
+        maxHard = 0
+        if len(friend['hard_highscores']) > 0:
+            maxHard = max(friend['hard_highscores'])
+
+        friendHighScores.append({
+            'first_name': friend['first_name'],
+            'last_name': friend['last_name'],
+            'fb_token': friend['fb_token'],
+            'easy_highscore': maxEasy,
+            'hard_highscore': maxHard
+        })
+
+    return json_response({ 'friends': friendHighScores}, status=200)

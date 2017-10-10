@@ -29,8 +29,11 @@ class DB:
     def findUserById(self, userId):
         return self.deserialize(self.db['users'].find_one({ '_id': ObjectId(userId) }))
 
-    def updateHighScores(userId, easyHS, hardHS):
-        return self.deserialize(self.db['users'].update_one({ '_id' : ObjectId(userId) }, { '$set': { 'easy_highscores': easyHS, 'hard_highscores': hardHS } } ))
+    def updateHighScores(self, userId, easyHS, hardHS):
+        return self.db['users'].update_one({ '_id' : ObjectId(userId) }, { '$set': { 'easy_highscores': easyHS, 'hard_highscores': hardHS } } )
+
+    def getAllUsersByFBTokens(self, fbTokens):
+        return self.deserialize(list(self.db['users'].find({ 'fb_token': { '$in' : fbTokens } })))
 
     # Helpers
 
