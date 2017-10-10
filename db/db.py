@@ -3,22 +3,34 @@ import datetime
 from pymongo import MongoClient
 from bson import ObjectId
 
+from config.config import Config
+
 
 class DB:
 
     def __init__(self):
-        self.db = 'blah'
+        self.config = Config()
+        self.db = MongoClient(self.config.dbURI)[self.config.dbName]
 
     def insertUser(self, user):
-
         user = {
             'first_name': user['first_name'],
             'last_name': user['last_name'],
-            'apn_token': user['apn_token'],
-            'session_token' : user['session_token']
+            'fb_token': user['fb_token'],
+            'easy_highscores': [],
+            'hard_highscores': []
         }
 
         return self.deserialize(self.db['users'].insert(user))
+
+    def findUserByFbToken(self, fbToken):
+        return self.deserialize(self.db['users'].find_one({ 'fb_token': fbToken }))
+
+    def findUserById(self, userId):
+        return self.deserialize(self.db['users'].find_one({ '_id': ObjectId(userId) }))
+
+    def updateHighScores(userId, easyHS, hardHS):
+        return self.deserialize(self.db['users'].update_one({ '_id' : ObjectId(userId) }, { '$set': { 'easy_highscores': easyHS, 'hard_highscores': hardHS } } ))
 
     # Helpers
 
