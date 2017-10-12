@@ -116,3 +116,7 @@ async def postUser(request, fb_token, mode):
     db.updateHighScores(user['_id'], easyHS, hardHS)
 
     return json_response({ 'success': 'removed ' + mode + ' highscores' }, status=201)
+
+@users.route('/healthcheck', methods=['GET'])
+async def healthcheck(request):
+    return json_response({ 'success': 'yaayyayayay' }, status=200)
