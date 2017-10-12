@@ -32,7 +32,7 @@ async def postUser(request):
 # GET - /users/fb_token/:fb_token
 #
 @users.route(baseURI + '/fb_token/<fb_token>', methods=['GET'])
-async def postUser(request, fb_token):
+async def getUser(request, fb_token):
 
     user = db.findUserByFbToken(fb_token)
     if user == None:
@@ -44,7 +44,7 @@ async def postUser(request, fb_token):
 # PATCH - /users/fb_token/:fb_token/sync_highscores
 #
 @users.route(baseURI + '/fb_token/<fb_token>/sync_highscores', methods=['PATCH'])
-async def postUser(request, fb_token):
+async def syncHighScores(request, fb_token):
     body = request.json
 
     if 'easy_highscores' not in body or 'hard_highscores' not in body:
@@ -66,10 +66,10 @@ async def postUser(request, fb_token):
 
 
 #
-# POST - /users/fb_token/:fb_token/sync_highscores
+# POST - /users/fb_token/:fb_token/get_friends_highscores
 #
 @users.route(baseURI + '/fb_token/<fb_token>/get_friends_highscores', methods=['POST'])
-async def postUser(request, fb_token):
+async def getFriendsHighscores(request, fb_token):
     body = request.json
 
     if 'fb_tokens' not in body:
@@ -105,7 +105,7 @@ async def postUser(request, fb_token):
 # DELETE - /users/fb_token/:fb_token/clear_highscores/:mode
 #
 @users.route(baseURI + '/fb_token/<fb_token>/clear_highscores/<mode>', methods=['DELETE'])
-async def postUser(request, fb_token, mode):
+async def deleteUser(request, fb_token, mode):
 
     user = db.findUserByFbToken(fb_token)
     if user == None:
